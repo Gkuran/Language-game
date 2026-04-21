@@ -1,85 +1,56 @@
-using Shapefile
-using DataFrames
-using CSV
+
+using XLSX, CSV, DataFrames
+
+file = "$( @__DIR__ )/datasets/geo_cepii.xlsx"   # path to your file
 
 # -------------------------------------------------------------------
-# INPUT
+# READ EXCEL
 # -------------------------------------------------------------------
 
-shapefile_path = "ne_110m_admin_0_countries.shp"
+xf = XLSX.readxlsx(file)
+#println(XLSX.sheetnames(xf))
+sh = xf["geo_cepii"]
+df = DataFrame(XLSX.gettable(sh))
+
+println(names(df))
 
 # -------------------------------------------------------------------
-# LOAD SHAPEFILE
+# SELECT & RENAME COLUMNS
+# (adjust names if needed after inspection)
+# -------------------------------------------------------------------
+name_col = :country
+iso_col  = :iso3
+lat_col  = :lat
+lon_col  = :lon
+area_col = :area
+
+# -------------------------------------------------------------------
+# BUILD CLEAN DATAFRAME
 # -------------------------------------------------------------------
 
-table = Shapefile.Table(shapefile_path)
+clean = DataFrame(
+    name = df[!, name_col],
+    iso  = df[!, iso_col],
+    lat  = df[!, lat_col],
+    lon  = df[!, lon_col],
+    area = df[!, area_col]
+)
 
 # -------------------------------------------------------------------
-# PROCESS COUNTRIES
+# FILTER INVALID ROWS
 # -------------------------------------------------------------------
 
-names = String[]
-isos  = String[]
-lats  = Float64[]
-lons  = Float64[]
-
-for row in table
-
-    name = row.ADMIN
-    iso  = row.ADM0_A3
-
-    # -----------------------------------------
-    # FILTER INVALID COUNTRIES
-    # -----------------------------------------
-    if iso == "-99"
-        continue
-    end
-
-    if name == "Antarctica"
-        continue
-    end
-
-    geom = row.geometry
-
-    # -----------------------------------------
-    # EXTRACT ALL POINTS (handles multipolygons)
-    # -----------------------------------------
-    xs = Float64[]
-    ys = Float64[]
-
-    for poly in geom.parts
-        for point in poly
-            push!(xs, point.x)
-            push!(ys, point.y)
-        end
-    end
-
-    # -----------------------------------------
-    # CENTROID (simple average)
-    # -----------------------------------------
-    lon = mean(xs)
-    lat = mean(ys)
-
-    # -----------------------------------------
-    # STORE
-    # -----------------------------------------
-    push!(names, name)
-    push!(isos, iso)
-    push!(lats, lat)
-    push!(lons, lon)
-end
+filter!(row ->
+    !ismissing(row.iso) &&
+    !ismissing(row.lat) &&
+    !ismissing(row.lon) &&
+    row.iso != "", clean)
 
 # -------------------------------------------------------------------
 # SAVE CSV
 # -------------------------------------------------------------------
 
-df = DataFrame(
-    name = names,
-    iso  = isos,
-    lat  = lats,
-    lon  = lons
-)
+sort!(clean, :name)
+CSV.write("countries.csv", clean)
+println("Saved countries.csv with $(nrow(clean)) countries")
 
-CSV.write("countries.csv", df)
-
-println("Saved countries.csv with $(nrow(df)) countries")
