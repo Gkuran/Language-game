@@ -20,9 +20,11 @@ println(names(df))
 # -------------------------------------------------------------------
 name_col = :country
 iso_col  = :iso3
+cont_col = :continent
 lat_col  = :lat
 lon_col  = :lon
 area_col = :area
+lang_col = :langoff_1
 
 # -------------------------------------------------------------------
 # BUILD data DATAFRAME
@@ -31,9 +33,11 @@ area_col = :area
 data = DataFrame(
     name = df[!, name_col],
     iso  = df[!, iso_col],
+    continent = df[!, cont_col],
     lat  = df[!, lat_col],
     lon  = df[!, lon_col],
-    area = df[!, area_col]
+    area = df[!, area_col],
+    lang = df[!, lang_col]
 )
 
 # -------------------------------------------------------------------
