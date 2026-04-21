@@ -11,6 +11,7 @@
   --line: #1a1a1a;
   --text: #f5f5f5;
   --muted: #a3a3a3;
+  --accent: #9eff6b;
 }
 
 html,
@@ -72,4 +73,25 @@ body {
 
 .footer-link:hover {
   color: #ffffff;
+}
+
+[data-simulation-canvas] {
+  width: 100%;
+  max-width: 480px;
+  max-height: 480px;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  display: block;
+  background: #050505;
+}
+
+@media (max-width: 900px) {
+  body {
+    overflow: auto;
+  }
+
+  .page-shell {
+    min-height: 100vh;
+    height: auto;
+  }
 }
